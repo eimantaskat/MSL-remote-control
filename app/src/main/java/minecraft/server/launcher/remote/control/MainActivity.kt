@@ -1,6 +1,8 @@
 package minecraft.server.launcher.remote.control
 
+import android.content.Context
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -31,5 +33,30 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        loadServerLogin()
+    }
+
+    fun saveServerLogin(privateIp: String, publicIp: String, port: String, password: String) {
+        val sharedPreferences = getSharedPreferences("serverLogin", Context.MODE_PRIVATE)
+
+        val editor = sharedPreferences.edit()
+        editor.apply {
+            putString("PRIVATE_IP", privateIp)
+            putString("PUBLIC_IP", publicIp)
+            putString("PORT", port)
+            putString("PASSWORD", password)
+        }.apply()
+    }
+
+    private fun loadServerLogin() {
+        val sharedPreferences = getSharedPreferences("serverLogin", Context.MODE_PRIVATE)
+
+        val privateIp = sharedPreferences.getString("PRIVATE_IP", "")
+        val publicIp = sharedPreferences.getString("PUBLIC_IP", "")
+        val port = sharedPreferences.getString("PORT", "")
+        val password = sharedPreferences.getString("PASSWORD", "")
+
+        // TODO: whats next?
     }
 }

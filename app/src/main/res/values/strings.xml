@@ -3,4 +3,11 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_console">Console</string>
+    <string name="scan_barcode">Scan Barcode</string>
+
+    <string name="scan_server_qr_text">Click the + button to scan the Minecraft Server Launcher QR code</string>
+    <string name="read_qr_button_description">Scan MSL QR code</string>
+    <string name="missing_camera_permission_message">Camera permission is required</string>
+    <string name="scan_qr_code_prompt">Scan QR code</string>
+    <string name="failed_to_read_qr_code">Failed to read QR code</string>
 </resources>

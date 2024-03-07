@@ -1,5 +1,6 @@
 package minecraft.server.launcher.remote.control.ui.home
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -97,7 +98,7 @@ class HomeFragment : Fragment() {
                         val password = parts[3]
 
                         (activity as MainActivity).viewModel.setServerInfo(privateIp, publicIp, port, password)
-                        updateServerStatus()
+                        updateServerStatus(requireContext())
                     }
                 }
         }
@@ -117,9 +118,10 @@ class HomeFragment : Fragment() {
         mslClient = newMslClient
     }
 
-    fun updateServerStatus() {
+    fun updateServerStatus(context: Context) {
         lifecycleScope.launch(Dispatchers.IO) {
             mslClient.loadServerInfo()
+            mslClient.getServerStatus(context)
         }
     }
 }

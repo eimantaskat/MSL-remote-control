@@ -1,11 +1,8 @@
 package minecraft.server.launcher.remote.control
 
-import android.content.Context
 import android.os.Bundle
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -37,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             // Now you can access the HomeFragment instance
             val homeFragment = fragmentContainer.childFragmentManager.fragments.firstOrNull { it is HomeFragment } as? HomeFragment
             homeFragment?.initMslClient(mslClient) // Call a function in HomeFragment if needed
-            homeFragment?.updateServerStatus()
+            homeFragment?.updateServerStatus(this)
         }
 
         val navView: BottomNavigationView = binding.navView

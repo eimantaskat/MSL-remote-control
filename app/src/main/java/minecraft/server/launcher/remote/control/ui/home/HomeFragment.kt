@@ -11,18 +11,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import minecraft.server.launcher.remote.control.MainActivity
+import minecraft.server.launcher.remote.control.MslClient
 import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
 import minecraft.server.launcher.remote.control.R
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 class HomeFragment : Fragment() {
-
     private var _binding: FragmentHomeBinding? = null
+    private lateinit var mslClient: MslClient
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -91,7 +96,8 @@ class HomeFragment : Fragment() {
                         val port = parts[2]
                         val password = parts[3]
 
-                        (activity as MainActivity).saveServerLogin(privateIp, publicIp, port, password)
+                        (activity as MainActivity).viewModel.setServerInfo(privateIp, publicIp, port, password)
+                        updateServerStatus()
                     }
                 }
         }
@@ -105,5 +111,15 @@ class HomeFragment : Fragment() {
         options.setOrientationLocked(false)
 
         scanLauncher.launch(options)
+    }
+
+    fun initMslClient(newMslClient: MslClient) {
+        mslClient = newMslClient
+    }
+
+    fun updateServerStatus() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            mslClient.loadServerInfo()
+        }
     }
 }

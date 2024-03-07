@@ -54,4 +54,8 @@ dependencies {
 
     implementation(libs.zxing.android.embedded)
     implementation(libs.core)
+    implementation(libs.androidx.datastore.preferences.core)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.android)
+
 }

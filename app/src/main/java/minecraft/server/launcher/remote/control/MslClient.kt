@@ -2,21 +2,16 @@ package minecraft.server.launcher.remote.control
 
 import android.content.Context
 import kotlinx.coroutines.flow.take
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.net.URL
-import java.security.KeyStore
-import java.security.SecureRandom
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 class MslClient(private val viewModel: MainViewModel) {
@@ -30,6 +25,7 @@ class MslClient(private val viewModel: MainViewModel) {
         val httpClientBuilder = OkHttpClient.Builder()
             .readTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
+            .addInterceptor(CookieInterceptor(password)) // Add the CookieInterceptor here
 
         // Create a TrustManager that trusts all hosts
         val trustAllCerts: Array<TrustManager> = arrayOf(
@@ -51,10 +47,17 @@ class MslClient(private val viewModel: MainViewModel) {
             .build()
     }
 
+    private class CookieInterceptor(private val password: String) : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val requestBuilder: Request.Builder = chain.request().newBuilder()
+            requestBuilder.addHeader("Cookie", "password=$password")
+            return chain.proceed(requestBuilder.build())
+        }
+    }
+
 
 
     fun getServerStatus(context: Context) {
-        // Generate a secure OkHttpClient using the provided context
         val httpClient = generateInsecureOkHttpClient()
 
         val address = "https://$privateIp:$port/is_alive"

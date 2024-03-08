@@ -27,9 +27,9 @@
         android:layout_marginEnd="50dp"
         android:layout_marginBottom="70dp"
         android:clickable="true"
+        android:contentDescription="@string/read_qr_button_description"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/qr_code_scan"
-        android:contentDescription="@string/read_qr_button_description" />
+        app:srcCompat="@drawable/qr_code_scan" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

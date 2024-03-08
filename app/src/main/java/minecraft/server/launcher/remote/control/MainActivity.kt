@@ -27,13 +27,13 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         dataStoreManager = DataStoreManager(this)
 
-        mslClient = MslClient(viewModel)
+        mslClient = MslClient(viewModel, this)
         // Now you can access the Fragment container
         val fragmentContainer = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
         if (fragmentContainer is NavHostFragment) {
             // Now you can access the HomeFragment instance
             val homeFragment = fragmentContainer.childFragmentManager.fragments.firstOrNull { it is HomeFragment } as? HomeFragment
-            homeFragment?.initMslClient(mslClient) // Call a function in HomeFragment if needed
+            homeFragment?.initMslClient(mslClient)
             homeFragment?.updateServerStatus()
         }
 

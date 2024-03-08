@@ -122,4 +122,5 @@ class HomeFragment : Fragment() {
             mslClient.getServerStatus()
         }
     }
+
 }

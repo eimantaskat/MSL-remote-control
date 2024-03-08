@@ -30,6 +30,7 @@ class DataStoreManager(context: Context) {
     suspend fun setLoginInfo(privateIp: String, publicIp: String, port: String, password: String) {
         dataStore.edit { pref ->
             pref[privateIpKey] = privateIp
+            pref[publicIpKey] = publicIp
             pref[portKey] = port
             pref[passwordKey] = password
         }

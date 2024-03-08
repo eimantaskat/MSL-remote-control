@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             // Now you can access the HomeFragment instance
             val homeFragment = fragmentContainer.childFragmentManager.fragments.firstOrNull { it is HomeFragment } as? HomeFragment
             homeFragment?.initMslClient(mslClient) // Call a function in HomeFragment if needed
-            homeFragment?.updateServerStatus(this)
+            homeFragment?.updateServerStatus()
         }
 
         val navView: BottomNavigationView = binding.navView

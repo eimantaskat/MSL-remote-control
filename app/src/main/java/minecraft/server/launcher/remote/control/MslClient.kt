@@ -1,13 +1,11 @@
 package minecraft.server.launcher.remote.control
 
-import android.content.Context
 import kotlinx.coroutines.flow.take
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.lang.Exception
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -25,6 +23,7 @@ class MslClient(private val viewModel: MainViewModel) {
         val httpClientBuilder = OkHttpClient.Builder()
             .readTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(2, TimeUnit.SECONDS)
             .addInterceptor(CookieInterceptor(password)) // Add the CookieInterceptor here
 
         // Create a TrustManager that trusts all hosts
@@ -55,34 +54,34 @@ class MslClient(private val viewModel: MainViewModel) {
         }
     }
 
-
-
-    fun getServerStatus(context: Context) {
+    private fun apiCall(address: String): String? {
         val httpClient = generateInsecureOkHttpClient()
-
-        val address = "https://$privateIp:$port/is_alive"
         val url = URL(address)
 
-        httpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
-            if (!response.isSuccessful) {
+        return try {
+            val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
+            if (response.isSuccessful) {
+                response.body?.string() // Return the response body as a string
+            } else {
                 println("Error: ${response.code}")
-                return
+                null
             }
+        } catch (e: Exception) {
+            println("An error occurred while making the API call to $address: $e")
+            null
+        }
+    }
 
-            val responseBody = response.body
-            responseBody?.let {
-                val inputStream = it.byteStream()
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                var line: String? = reader.readLine()
-                while (line != null) {
-                    println(line) // We get a response
-                    line = reader.readLine()
-                }
-                reader.close()
+    fun getServerStatus() {
+        var response = apiCall("https://$privateIp:$port/is_alive")
+        if (response == null) {
+            response = apiCall("https://$publicIp:$port/is_alive")
+            if (response == null) {
+                    return
             }
         }
 
-        // TODO: public ip
+        println(response)
     }
 
 

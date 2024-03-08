@@ -1,6 +1,5 @@
 package minecraft.server.launcher.remote.control.ui.home
 
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,7 +17,6 @@ import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import minecraft.server.launcher.remote.control.MainActivity
 import minecraft.server.launcher.remote.control.MslClient
 import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
@@ -89,7 +87,7 @@ class HomeFragment : Fragment() {
                         Toast.makeText(context, getString(R.string.failed_to_read_qr_code), Toast.LENGTH_SHORT).show()
                     } else {
                         val decodedDataByteArray: ByteArray = Base64.decode(result.contents)
-                        val decodedData: String = String(decodedDataByteArray, Charsets.UTF_8)
+                        val decodedData = String(decodedDataByteArray, Charsets.UTF_8)
 
                         val parts = decodedData.split(":", limit=4)
                         val privateIp = parts[0]
@@ -98,7 +96,7 @@ class HomeFragment : Fragment() {
                         val password = parts[3]
 
                         (activity as MainActivity).viewModel.setServerInfo(privateIp, publicIp, port, password)
-                        updateServerStatus(requireContext())
+                        updateServerStatus()
                     }
                 }
         }
@@ -118,10 +116,10 @@ class HomeFragment : Fragment() {
         mslClient = newMslClient
     }
 
-    fun updateServerStatus(context: Context) {
+    fun updateServerStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
             mslClient.loadServerInfo()
-            mslClient.getServerStatus(context)
+            mslClient.getServerStatus()
         }
     }
 }

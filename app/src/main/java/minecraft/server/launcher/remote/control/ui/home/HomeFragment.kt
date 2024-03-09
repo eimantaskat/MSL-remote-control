@@ -1,6 +1,7 @@
 package minecraft.server.launcher.remote.control.ui.home
 
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,10 +21,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import minecraft.server.launcher.remote.control.MainActivity
 import minecraft.server.launcher.remote.control.MslClient
-import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
 import minecraft.server.launcher.remote.control.R
+import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
+
+enum class ConnectionState {
+    CONNECTING,
+    CONNECTED,
+    NOT_CONNECTED
+}
+
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -61,6 +70,35 @@ class HomeFragment : Fragment() {
 
         homeViewModel.loadingVisibility.observe(viewLifecycleOwner) { visibility ->
             binding.loadingProgessBar.visibility = visibility
+        }
+
+        homeViewModel.infoTextVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.infoText.visibility = visibility
+        }
+
+        homeViewModel.notConnectedButtonsVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.retryButton.visibility = visibility
+            binding.scanQrButton.visibility = visibility
+        }
+
+        homeViewModel.textColor.observe(viewLifecycleOwner) { color ->
+            binding.statusText.setTextColor(ContextCompat.getColor(requireContext(), color))
+        }
+
+        // Bind functions to buttons
+        binding.retryButton.setOnClickListener {
+            updateServerStatus()
+        }
+
+        binding.scanQrButton.setOnClickListener {
+            val context = requireContext()
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                showCamera()
+            } else if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)) {
+                Toast.makeText(context, R.string.missing_camera_permission_message, Toast.LENGTH_SHORT).show()
+            } else {
+                requestPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+            }
         }
         return root
     }
@@ -122,41 +160,53 @@ class HomeFragment : Fragment() {
 
     fun updateServerStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
-            setStateFromCoroutine("connecting")
+            setStateFromCoroutine(ConnectionState.CONNECTING)
             mslClient.loadServerInfo()
             val response = mslClient.getServerStatus()
             if (response == null) {
-                setStateFromCoroutine("not_connected")
+                setStateFromCoroutine(ConnectionState.NOT_CONNECTED)
             } else {
-                setStateFromCoroutine("connected")
+                setStateFromCoroutine(ConnectionState.CONNECTED)
             }
         }
     }
 
-    private suspend fun setStateFromCoroutine(state: String) {
+    private suspend fun setStateFromCoroutine(state: ConnectionState) {
         withContext(Dispatchers.Main) {
             setState(state)
         }
     }
 
-    private fun setState(state: String) {
+    private fun setState(state: ConnectionState) {
         val viewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
 
         when (state) {
-            "connecting" -> {
+            ConnectionState.CONNECTING -> {
                 viewModel.updateText(getString(R.string.status_connecting))
                 viewModel.setLoadingVisibility(View.VISIBLE)
+                viewModel.setInfoTextVisibility(View.INVISIBLE)
+                viewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
+
+                val nightModeFlags = requireContext().resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+                    viewModel.setStatusTextColor(android.R.color.white)
+                } else {
+                    viewModel.setStatusTextColor(android.R.color.black)
+                }
             }
-            "connected" -> {
+            ConnectionState.CONNECTED -> {
                 viewModel.updateText(getString(R.string.status_connected))
                 viewModel.setLoadingVisibility(View.INVISIBLE)
+                viewModel.setInfoTextVisibility(View.INVISIBLE)
+                viewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
+                viewModel.setStatusTextColor(android.R.color.holo_green_light)
             }
-            "not_connected" -> {
+            ConnectionState.NOT_CONNECTED -> {
                 viewModel.updateText(getString(R.string.status_not_connected))
                 viewModel.setLoadingVisibility(View.INVISIBLE)
-            }
-            else -> {
-                println("nah")
+                viewModel.setInfoTextVisibility(View.VISIBLE)
+                viewModel.setNotConnectedButtonsVisibility(View.VISIBLE)
+                viewModel.setStatusTextColor(android.R.color.holo_red_dark)
             }
         }
     }

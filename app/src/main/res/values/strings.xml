@@ -11,4 +11,7 @@
     <string name="scan_qr_code_prompt">Scan QR code</string>
     <string name="failed_to_read_qr_code">Failed to read QR code</string>
     <string name="connecting_to_server">Connecting to MSL…</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_not_connected">Not connected</string>
 </resources>

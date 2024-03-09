@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.journeyapps.barcodescanner.ScanContract
@@ -17,6 +17,7 @@ import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import minecraft.server.launcher.remote.control.MainActivity
 import minecraft.server.launcher.remote.control.MslClient
 import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
@@ -32,14 +33,13 @@ class HomeFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    private val homeViewModel: HomeViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this)[HomeViewModel::class.java]
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -54,9 +54,13 @@ class HomeFragment : Fragment() {
             }
         }
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        // Observe the LiveData from the ViewModel and update UI accordingly
+        homeViewModel.text.observe(viewLifecycleOwner) { newText ->
+            binding.statusText.text = newText
+        }
+
+        homeViewModel.loadingVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.loadingProgessBar.visibility = visibility
         }
         return root
     }
@@ -118,8 +122,42 @@ class HomeFragment : Fragment() {
 
     fun updateServerStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
+            setStateFromCoroutine("connecting")
             mslClient.loadServerInfo()
-            mslClient.getServerStatus()
+            val response = mslClient.getServerStatus()
+            if (response == null) {
+                setStateFromCoroutine("not_connected")
+            } else {
+                setStateFromCoroutine("connected")
+            }
+        }
+    }
+
+    private suspend fun setStateFromCoroutine(state: String) {
+        withContext(Dispatchers.Main) {
+            setState(state)
+        }
+    }
+
+    private fun setState(state: String) {
+        val viewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
+
+        when (state) {
+            "connecting" -> {
+                viewModel.updateText(getString(R.string.status_connecting))
+                viewModel.setLoadingVisibility(View.VISIBLE)
+            }
+            "connected" -> {
+                viewModel.updateText(getString(R.string.status_connected))
+                viewModel.setLoadingVisibility(View.INVISIBLE)
+            }
+            "not_connected" -> {
+                viewModel.updateText(getString(R.string.status_not_connected))
+                viewModel.setLoadingVisibility(View.INVISIBLE)
+            }
+            else -> {
+                println("nah")
+            }
         }
     }
 

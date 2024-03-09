@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         dataStoreManager = DataStoreManager(this)
 
-        mslClient = MslClient(viewModel, this)
+        mslClient = MslClient(viewModel)
         // Now you can access the Fragment container
         val fragmentContainer = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
         if (fragmentContainer is NavHostFragment) {

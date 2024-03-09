@@ -1,9 +1,7 @@
 package minecraft.server.launcher.remote.control
 
 import android.content.Context
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,30 +13,11 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-class MslClient(private val viewModel: MainViewModel, private val context: Context) {
+class MslClient(private val viewModel: MainViewModel) {
     private lateinit var privateIp: String
     private lateinit var publicIp: String
     private lateinit var port: String
     private lateinit var password: String
-
-    private val loadingDialog by lazy {
-        androidx.appcompat.app.AlertDialog.Builder(context)
-            .setView(R.layout.loading_dialog)
-            .setCancelable(false)
-            .create()
-    }
-
-    private suspend fun showLoadingDialog() {
-        withContext(Dispatchers.Main) {
-            loadingDialog.show()
-        }
-    }
-
-    private suspend fun hideLoadingDialog() {
-        withContext(Dispatchers.Main) {
-            loadingDialog.hide()
-        }
-    }
 
     private fun generateInsecureOkHttpClient(): OkHttpClient {
         // Create a simple builder for our http client
@@ -94,19 +73,17 @@ class MslClient(private val viewModel: MainViewModel, private val context: Conte
         }
     }
 
-    suspend fun getServerStatus() {
-        showLoadingDialog()
+    fun getServerStatus(): String? {
         var response = apiCall("https://$privateIp:$port/is_alive")
         if (response == null) {
             response = apiCall("https://$publicIp:$port/is_alive")
             if (response == null) {
-                hideLoadingDialog()
-                return
+                return null
             }
         }
 
         println(response)
-        hideLoadingDialog()
+        return response
     }
 
 

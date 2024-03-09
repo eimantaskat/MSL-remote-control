@@ -11,18 +11,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import minecraft.server.launcher.remote.control.MainActivity
 import minecraft.server.launcher.remote.control.MslClient
 import minecraft.server.launcher.remote.control.R
 import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
+import org.json.JSONObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -44,6 +48,8 @@ class HomeFragment : Fragment() {
 
     private val homeViewModel: HomeViewModel by activityViewModels()
 
+    private var refreshMslStateJob: Job? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,12 +70,12 @@ class HomeFragment : Fragment() {
         }
 
         // Observe the LiveData from the ViewModel and update UI accordingly
-        homeViewModel.text.observe(viewLifecycleOwner) { newText ->
+        homeViewModel.statusText.observe(viewLifecycleOwner) { newText ->
             binding.statusText.text = newText
         }
 
         homeViewModel.loadingVisibility.observe(viewLifecycleOwner) { visibility ->
-            binding.loadingProgessBar.visibility = visibility
+            binding.loadingProgressBar.visibility = visibility
         }
 
         homeViewModel.infoTextVisibility.observe(viewLifecycleOwner) { visibility ->
@@ -81,8 +87,32 @@ class HomeFragment : Fragment() {
             binding.scanQrButton.visibility = visibility
         }
 
-        homeViewModel.textColor.observe(viewLifecycleOwner) { color ->
+        homeViewModel.statusTextColor.observe(viewLifecycleOwner) { color ->
             binding.statusText.setTextColor(ContextCompat.getColor(requireContext(), color))
+        }
+
+        homeViewModel.infoText.observe(viewLifecycleOwner) { newText ->
+            binding.infoText.text = newText
+        }
+
+        homeViewModel.serverInfoLayoutVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.serverInfoLinearLayout.visibility = visibility
+        }
+
+        homeViewModel.serverVersionText.observe(viewLifecycleOwner) { version ->
+            binding.versionText.text = version
+        }
+
+        homeViewModel.playerCountText.observe(viewLifecycleOwner) { playersText ->
+            binding.playersText.text = playersText
+        }
+
+        homeViewModel.serverNameText.observe(viewLifecycleOwner) { newText ->
+            binding.serverNameText.text = newText
+        }
+
+        homeViewModel.serverDescriptionText.observe(viewLifecycleOwner) { newText ->
+            binding.serverDesriptionText.text = newText
         }
 
         // Bind functions to buttons
@@ -171,6 +201,44 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun refreshServerStatus() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val response = mslClient.getServerStatus()
+            if (response == null) {
+                setStateFromCoroutine(ConnectionState.NOT_CONNECTED)
+                return@launch
+            }
+
+            val jsonResponse = JSONObject(response)
+            val isRunning = jsonResponse.getBoolean("is_running")
+            if (!isRunning) {
+                withContext(Dispatchers.Main) {
+                    homeViewModel.setInfoText(getString(R.string.server_not_running))
+                    homeViewModel.setInfoTextVisibility(View.VISIBLE)
+                    homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
+                }
+                return@launch
+            }
+
+            val info = jsonResponse.getJSONObject("info")
+            val serverName = info.getString("name")
+            val version = info.getString("version")
+            val description = info.getString("description")
+            val maxPlayers = info.getInt("max_players")
+            val onlinePlayers = info.getInt("online_players")
+
+            withContext(Dispatchers.Main) {
+                homeViewModel.setServerNameText(serverName)
+                homeViewModel.setDescriptionText(description)
+                homeViewModel.setServerVersionText(version)
+                homeViewModel.setPlayerCountText(onlinePlayers, maxPlayers)
+
+                homeViewModel.setInfoTextVisibility(View.INVISIBLE)
+                homeViewModel.setServerInfoLayoutVisibility(View.VISIBLE)
+            }
+        }
+    }
+
     private suspend fun setStateFromCoroutine(state: ConnectionState) {
         withContext(Dispatchers.Main) {
             setState(state)
@@ -178,35 +246,44 @@ class HomeFragment : Fragment() {
     }
 
     private fun setState(state: ConnectionState) {
-        val viewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
-
         when (state) {
             ConnectionState.CONNECTING -> {
-                viewModel.updateText(getString(R.string.status_connecting))
-                viewModel.setLoadingVisibility(View.VISIBLE)
-                viewModel.setInfoTextVisibility(View.INVISIBLE)
-                viewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
+                homeViewModel.setStatusText(getString(R.string.status_connecting))
+                homeViewModel.setLoadingVisibility(View.VISIBLE)
+                homeViewModel.setInfoTextVisibility(View.INVISIBLE)
+                homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
+                homeViewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
 
                 val nightModeFlags = requireContext().resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
                 if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-                    viewModel.setStatusTextColor(android.R.color.white)
+                    homeViewModel.setStatusTextColor(android.R.color.white)
                 } else {
-                    viewModel.setStatusTextColor(android.R.color.black)
+                    homeViewModel.setStatusTextColor(android.R.color.black)
                 }
             }
             ConnectionState.CONNECTED -> {
-                viewModel.updateText(getString(R.string.status_connected))
-                viewModel.setLoadingVisibility(View.INVISIBLE)
-                viewModel.setInfoTextVisibility(View.INVISIBLE)
-                viewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
-                viewModel.setStatusTextColor(android.R.color.holo_green_light)
+                homeViewModel.setStatusText(getString(R.string.status_connected))
+                homeViewModel.setLoadingVisibility(View.INVISIBLE)
+                homeViewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
+                homeViewModel.setStatusTextColor(android.R.color.holo_green_light)
+
+                refreshMslStateJob = CoroutineScope(Dispatchers.Main).launch {
+                    while (isActive) {
+                        refreshServerStatus()
+                        delay(5000)
+                    }
+                }
             }
             ConnectionState.NOT_CONNECTED -> {
-                viewModel.updateText(getString(R.string.status_not_connected))
-                viewModel.setLoadingVisibility(View.INVISIBLE)
-                viewModel.setInfoTextVisibility(View.VISIBLE)
-                viewModel.setNotConnectedButtonsVisibility(View.VISIBLE)
-                viewModel.setStatusTextColor(android.R.color.holo_red_dark)
+                homeViewModel.setStatusText(getString(R.string.status_not_connected))
+                homeViewModel.setLoadingVisibility(View.INVISIBLE)
+                homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
+                homeViewModel.setInfoText(getString(R.string.home_info_not_connected))
+                homeViewModel.setInfoTextVisibility(View.VISIBLE)
+                homeViewModel.setNotConnectedButtonsVisibility(View.VISIBLE)
+                homeViewModel.setStatusTextColor(android.R.color.holo_red_dark)
+
+                refreshMslStateJob?.cancel()
             }
         }
     }

@@ -1,6 +1,5 @@
 package minecraft.server.launcher.remote.control
 
-import android.content.Context
 import kotlinx.coroutines.flow.take
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -74,15 +73,13 @@ class MslClient(private val viewModel: MainViewModel) {
     }
 
     fun getServerStatus(): String? {
-        var response = apiCall("https://$privateIp:$port/is_alive")
+        var response = apiCall("https://$privateIp:$port/get_msl_status")
         if (response == null) {
-            response = apiCall("https://$publicIp:$port/is_alive")
+            response = apiCall("https://$publicIp:$port/get_msl_status")
             if (response == null) {
                 return null
             }
         }
-
-        println(response)
         return response
     }
 

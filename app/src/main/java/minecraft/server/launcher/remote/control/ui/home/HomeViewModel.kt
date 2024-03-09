@@ -7,10 +7,8 @@ import androidx.lifecycle.ViewModel
 
 class HomeViewModel : ViewModel() {
 
-    private val _text = MutableLiveData<String>().apply {
-        value = "test"
-    }
-    val text: LiveData<String> = _text
+    private val _statusText = MutableLiveData<String>()
+    val statusText: LiveData<String> = _statusText
 
     private val _loadingVisibility = MutableLiveData<Int>().apply {
         value = View.INVISIBLE
@@ -22,16 +20,40 @@ class HomeViewModel : ViewModel() {
     }
     val infoTextVisibility: LiveData<Int> = _infoTextVisibility
 
+    private val _infoText = MutableLiveData<String>()
+    val infoText: LiveData<String> = _infoText
+
     private val _notConnectedButtonsVisibility = MutableLiveData<Int>().apply {
         value = View.INVISIBLE
     }
     val notConnectedButtonsVisibility: LiveData<Int> = _notConnectedButtonsVisibility
 
     private val _statusTextColor = MutableLiveData<Int>()
-    val textColor: LiveData<Int> = _statusTextColor
+    val statusTextColor: LiveData<Int> = _statusTextColor
 
-    fun updateText(newText: String) {
-        _text.value = newText
+    private val _serverInfoLayoutVisibility = MutableLiveData<Int>().apply {
+        value = View.INVISIBLE
+    }
+    val serverInfoLayoutVisibility: LiveData<Int> = _serverInfoLayoutVisibility
+
+    private val _serverVersionText = MutableLiveData<String>()
+    val serverVersionText: LiveData<String> = _serverVersionText
+
+    private val _playerCountText = MutableLiveData<String>()
+    val playerCountText: LiveData<String> = _playerCountText
+
+    private val _serverNameText = MutableLiveData<String>()
+    val serverNameText: LiveData<String> = _serverNameText
+
+    private val _serverDescriptionText = MutableLiveData<String>()
+    val serverDescriptionText: LiveData<String> = _serverDescriptionText
+
+    fun setInfoText(newText: String) {
+        _infoText.value = newText
+    }
+
+    fun setStatusText(newText: String) {
+        _statusText.value = newText
     }
 
     fun setLoadingVisibility(visibility: Int) {
@@ -48,5 +70,25 @@ class HomeViewModel : ViewModel() {
 
     fun setStatusTextColor(colorResId: Int) {
         _statusTextColor.value = colorResId
+    }
+
+    fun setServerInfoLayoutVisibility(visibility: Int) {
+        _serverInfoLayoutVisibility.value = visibility
+    }
+
+    fun setServerVersionText(version: String) {
+        _serverVersionText.value = version
+    }
+
+    fun setPlayerCountText(onlinePlayers: Int, maxPlayers: Int) {
+        _playerCountText.value = "$onlinePlayers / $maxPlayers"
+    }
+
+    fun setServerNameText(text: String) {
+        _serverNameText.value = text
+    }
+
+    fun setDescriptionText(text: String) {
+        _serverDescriptionText.value = text
     }
 }

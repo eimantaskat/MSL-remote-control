@@ -16,4 +16,7 @@
     <string name="home_info_not_connected">Unable to connect to Minecraft Server Launcher</string>
     <string name="read_qr_button_description_short">Scan QR Code</string>
     <string name="retry">Retry</string>
+    <string name="server_not_running">No server is running</string>
+    <string name="version_icon_description">Server version</string>
+    <string name="player_count_description">Player count</string>
 </resources>

@@ -49,6 +49,7 @@ class HomeFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
 
     private var refreshMslStateJob: Job? = null
+    private lateinit var mainActivity: MainActivity
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -192,6 +193,10 @@ class HomeFragment : Fragment() {
         mslClient = newMslClient
     }
 
+    fun setMainActivity(newMainActivity: MainActivity) {
+        mainActivity = newMainActivity
+    }
+
     fun updateServerStatus() {
         lifecycleScope.launch(Dispatchers.IO) {
             setStateFromCoroutine(ConnectionState.CONNECTING)
@@ -217,6 +222,8 @@ class HomeFragment : Fragment() {
             val isRunning = jsonResponse.getBoolean("is_running")
             if (!isRunning) {
                 withContext(Dispatchers.Main) {
+                    mainActivity.serverIsRunning.value = false
+
                     homeViewModel.setInfoText(getString(R.string.server_not_running))
                     homeViewModel.setInfoTextVisibility(View.VISIBLE)
                     homeViewModel.setStatusTextVisibility(View.VISIBLE)
@@ -233,6 +240,8 @@ class HomeFragment : Fragment() {
             val onlinePlayers = info.getInt("online_players")
 
             withContext(Dispatchers.Main) {
+                mainActivity.serverIsRunning.value = true
+
                 homeViewModel.setServerNameText(serverName)
                 homeViewModel.setDescriptionText(description)
                 homeViewModel.setServerVersionText(version)
@@ -251,8 +260,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun setState(state: ConnectionState) {
-        when (state) {
+    private fun setState(newState: ConnectionState) {
+        when (newState) {
             ConnectionState.CONNECTING -> {
                 homeViewModel.setStatusText(getString(R.string.status_connecting))
                 homeViewModel.setStatusTextVisibility(View.VISIBLE)
@@ -277,7 +286,7 @@ class HomeFragment : Fragment() {
                 refreshMslStateJob = CoroutineScope(Dispatchers.Main).launch {
                     while (isActive) {
                         refreshServerStatus()
-                        delay(5000)
+                        delay(1000)
                     }
                 }
             }

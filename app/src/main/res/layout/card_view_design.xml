@@ -5,4 +5,4 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="10dp"
     android:fontFamily="@font/dejavu_sans_mono"
-    android:textSize="20sp" />
+    android:textSize="11sp" />

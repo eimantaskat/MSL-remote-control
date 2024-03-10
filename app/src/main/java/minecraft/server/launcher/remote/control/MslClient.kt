@@ -5,7 +5,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import java.lang.Exception
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -18,12 +17,14 @@ class MslClient(private val viewModel: MainViewModel) {
     private lateinit var port: String
     private lateinit var password: String
 
-    private fun generateInsecureOkHttpClient(): OkHttpClient {
+    private lateinit var activeIp: String
+
+    private fun generateInsecureOkHttpClient(callTimeout: Long): OkHttpClient {
         // Create a simple builder for our http client
         val httpClientBuilder = OkHttpClient.Builder()
             .readTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
-            .callTimeout(5, TimeUnit.SECONDS)
+            .callTimeout(callTimeout, TimeUnit.SECONDS)
             .addInterceptor(CookieInterceptor(password)) // Add the CookieInterceptor here
 
         // Create a TrustManager that trusts all hosts
@@ -54,8 +55,8 @@ class MslClient(private val viewModel: MainViewModel) {
         }
     }
 
-    private fun apiCall(address: String): String? {
-        val httpClient = generateInsecureOkHttpClient()
+    private fun apiCall(address: String, callTimeout: Long = 30): String? {
+        val httpClient = generateInsecureOkHttpClient(callTimeout)
         val url = URL(address)
 
         return try {
@@ -72,15 +73,51 @@ class MslClient(private val viewModel: MainViewModel) {
         }
     }
 
-    fun getServerStatus(): String? {
-        var response = apiCall("https://$privateIp:$port/get_msl_status")
-        if (response == null) {
-            response = apiCall("https://$publicIp:$port/get_msl_status")
-            if (response == null) {
-                return null
+    private fun activeApiCall(route: String, callTimeout: Long = 30): String? {
+        val address = "https://$activeIp:$port/$route"
+
+        val httpClient = generateInsecureOkHttpClient(callTimeout)
+        val url = URL(address)
+
+        return try {
+            val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
+            if (response.isSuccessful) {
+                response.body?.string() // Return the response body as a string
+            } else {
+                println("Error: ${response.code}")
+                null
+            }
+        } catch (e: Exception) {
+            println("An error occurred while making the API call to $address: $e")
+            null
+        }
+    }
+
+    private fun apiCallWithUnknownIp(route: String, callTimeout: Long = 30): String? {
+        var response = apiCall("https://$privateIp:$port/$route", callTimeout)
+        if (response != null) {
+            activeIp = privateIp
+        } else {
+            response = apiCall("https://$publicIp:$port/$route", callTimeout)
+            if (response != null) {
+                activeIp = publicIp
             }
         }
         return response
+    }
+
+    fun getServerStatus(): String? {
+        val callTimeout: Long = 4
+        if (!this::activeIp.isInitialized) {
+            return apiCallWithUnknownIp("get_msl_status", callTimeout)
+        }
+
+        return apiCall("https://$activeIp:$port/get_msl_status", callTimeout)
+            ?: return apiCallWithUnknownIp("get_msl_status", callTimeout)
+    }
+
+    fun getConsoleLog(startLine: Int = 0): String? {
+        return activeApiCall("get_console_log?start_line=$startLine")
     }
 
 

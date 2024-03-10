@@ -8,12 +8,18 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ConsoleRecyclerviewAdapter : RecyclerView.Adapter<ConsoleRecyclerviewAdapter.ViewHolder>() {
 
-    private val mList: MutableList<String> = mutableListOf()
+    private val consoleLines: MutableList<String> = mutableListOf()
 
     // Method to add data
     fun addData(data: String) {
-        mList.add(data)
-        notifyItemInserted(mList.size - 1)
+        consoleLines.add(data)
+        notifyItemInserted(consoleLines.size - 1)
+    }
+
+    fun clear() {
+        val size: Int = consoleLines.size
+        consoleLines.clear()
+        notifyItemRangeRemoved(0, size)
     }
 
     // create new views
@@ -28,14 +34,14 @@ class ConsoleRecyclerviewAdapter : RecyclerView.Adapter<ConsoleRecyclerviewAdapt
 
     // binds the list items to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val itemViewModel = mList[position]
+        val itemViewModel = consoleLines[position]
         // sets the text to the textview from our itemHolder class
         holder.textView.text = itemViewModel
     }
 
     // return the number of the items in the list
     override fun getItemCount(): Int {
-        return mList.size
+        return consoleLines.size
     }
 
     // Holds the views for adding it to image and text

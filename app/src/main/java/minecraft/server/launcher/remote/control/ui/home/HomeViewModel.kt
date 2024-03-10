@@ -1,5 +1,6 @@
 package minecraft.server.launcher.remote.control.ui.home
 
+import android.opengl.Visibility
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -27,6 +28,11 @@ class HomeViewModel : ViewModel() {
         value = View.INVISIBLE
     }
     val notConnectedButtonsVisibility: LiveData<Int> = _notConnectedButtonsVisibility
+
+    private val _statusTextVisibility = MutableLiveData<Int>().apply {
+        value = View.VISIBLE
+    }
+    val statusTextVisibility: LiveData<Int> = _statusTextVisibility
 
     private val _statusTextColor = MutableLiveData<Int>()
     val statusTextColor: LiveData<Int> = _statusTextColor
@@ -66,6 +72,10 @@ class HomeViewModel : ViewModel() {
 
     fun setNotConnectedButtonsVisibility(visibility: Int) {
         _notConnectedButtonsVisibility.value = visibility
+    }
+
+    fun setStatusTextVisibility(visibility: Int) {
+        _statusTextVisibility.value = visibility
     }
 
     fun setStatusTextColor(colorResId: Int) {

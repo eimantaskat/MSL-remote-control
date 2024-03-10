@@ -96,14 +96,16 @@
         android:id="@+id/serverInfoLinearLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginBottom="50dp"
         android:orientation="vertical"
         android:padding="16dp"
         android:paddingTop="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/status_text">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/serverNameCardView"
@@ -129,8 +131,8 @@
                     android:layout_marginTop="5dp"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
-                    android:textStyle="bold"
                     android:textSize="28sp"
+                    android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
@@ -181,13 +183,13 @@
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
+                        android:contentDescription="@string/version_icon_description"
                         android:src="@drawable/ic_tag_black_24dp"
                         app:layout_constraintBottom_toTopOf="@id/versionText"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:contentDescription="@string/version_icon_description" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/versionText"
@@ -222,12 +224,12 @@
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
+                        android:contentDescription="@string/player_count_description"
                         android:src="@drawable/ic_users_black_24dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:contentDescription="@string/player_count_description" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/playersText"

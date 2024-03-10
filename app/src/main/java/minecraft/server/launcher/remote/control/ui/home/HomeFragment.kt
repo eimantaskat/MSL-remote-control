@@ -87,6 +87,10 @@ class HomeFragment : Fragment() {
             binding.scanQrButton.visibility = visibility
         }
 
+        homeViewModel.statusTextVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.statusText.visibility = visibility
+        }
+
         homeViewModel.statusTextColor.observe(viewLifecycleOwner) { color ->
             binding.statusText.setTextColor(ContextCompat.getColor(requireContext(), color))
         }
@@ -215,6 +219,7 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     homeViewModel.setInfoText(getString(R.string.server_not_running))
                     homeViewModel.setInfoTextVisibility(View.VISIBLE)
+                    homeViewModel.setStatusTextVisibility(View.VISIBLE)
                     homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
                 }
                 return@launch
@@ -234,6 +239,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.setPlayerCountText(onlinePlayers, maxPlayers)
 
                 homeViewModel.setInfoTextVisibility(View.INVISIBLE)
+                homeViewModel.setStatusTextVisibility(View.INVISIBLE)
                 homeViewModel.setServerInfoLayoutVisibility(View.VISIBLE)
             }
         }
@@ -249,6 +255,7 @@ class HomeFragment : Fragment() {
         when (state) {
             ConnectionState.CONNECTING -> {
                 homeViewModel.setStatusText(getString(R.string.status_connecting))
+                homeViewModel.setStatusTextVisibility(View.VISIBLE)
                 homeViewModel.setLoadingVisibility(View.VISIBLE)
                 homeViewModel.setInfoTextVisibility(View.INVISIBLE)
                 homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
@@ -276,6 +283,7 @@ class HomeFragment : Fragment() {
             }
             ConnectionState.NOT_CONNECTED -> {
                 homeViewModel.setStatusText(getString(R.string.status_not_connected))
+                homeViewModel.setStatusTextVisibility(View.VISIBLE)
                 homeViewModel.setLoadingVisibility(View.INVISIBLE)
                 homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
                 homeViewModel.setInfoText(getString(R.string.home_info_not_connected))

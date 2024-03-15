@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,20 +8,30 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/console_recyclerview"
         android:layout_width="match_parent"
-        android:layout_height="620dp"
+        android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/consoleInputEditText"
         tools:listitem="@layout/card_view_design" />
 
-    <TextView
-        android:id="@+id/text_notifications"
+    <EditText
+        android:id="@+id/consoleInputEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="20dp"
-        android:textAlignment="center"
+        android:ems="10"
+        android:fontFamily="@font/dejavu_sans_mono"
+        android:importantForAutofill="no"
         android:textSize="20sp"
+        android:inputType="text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/console_recyclerview" />
+        android:labelFor="@id/consoleInputEditText"
+        app:layout_constraintBottom_toTopOf="@id/navigation_bar_placeholder" />
+
+    <View
+        android:id="@+id/navigation_bar_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -107,7 +107,7 @@ class MslClient(private val viewModel: MainViewModel) {
     }
 
     fun getServerStatus(): String? {
-        val callTimeout: Long = 4
+        val callTimeout: Long = 30
         if (!this::activeIp.isInitialized) {
             return apiCallWithUnknownIp("get_msl_status", callTimeout)
         }
@@ -118,6 +118,11 @@ class MslClient(private val viewModel: MainViewModel) {
 
     fun getConsoleLog(startLine: Int = 0): String? {
         return activeApiCall("get_console_log?start_line=$startLine")
+    }
+
+    fun executeConsoleCommand(command: String): String? {
+        val route = "execute_console_command?command=$command"
+        return activeApiCall(route)
     }
 
 

@@ -1,12 +1,11 @@
 package minecraft.server.launcher.remote.control.ui.console
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -33,22 +32,18 @@ class ConsoleFragment : Fragment() {
     private lateinit var mainActivity: MainActivity
     private var serverIsRunning = false
     private var lastKnownLineNumber = 0
+    private var oldBottom: Int = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(ConsoleViewModel::class.java)
+//        val notificationsViewModel =
+//            ViewModelProvider(this).get(ConsoleViewModel::class.java)
 
         _binding = FragmentConsoleBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-        val textView: TextView = binding.textNotifications
-        notificationsViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
 
         consoleRecyclerView = binding.consoleRecyclerview
         consoleRecyclerView.itemAnimator = null
@@ -71,6 +66,36 @@ class ConsoleFragment : Fragment() {
                 serverIsRunning = false
                 lastKnownLineNumber = 0
             }
+        }
+
+        consoleRecyclerView.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
+            // Check if bottom is smaller than oldBottom
+            if (bottom < oldBottom) {
+                // Perform scrolling after a delay to ensure layout changes are complete
+//                consoleRecyclerView.postDelayed({
+                // Scroll to the desired position (e.g., bottom position)
+                val bottomPosition = adapter.itemCount - 1
+                if (bottomPosition >= 0) {
+                    consoleRecyclerView.smoothScrollToPosition(bottomPosition)
+                }
+//                }, 100)
+            }
+            // Update oldBottom with the current bottom position
+            oldBottom = bottom
+        }
+
+        binding.consoleInputEditText.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_ENTER) {
+                val inputText = binding.consoleInputEditText.text.toString().trim()
+                if (inputText.isNotEmpty()) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        mslClient.executeConsoleCommand(inputText)
+                    }
+                    binding.consoleInputEditText.setText("")
+                }
+                return@setOnKeyListener true
+            }
+            false
         }
 
         return root
@@ -97,7 +122,7 @@ class ConsoleFragment : Fragment() {
                             val visibleItem = layoutManager.findLastVisibleItemPosition()
                             val diff = (itemCount - visibleItem)
                             isScrolledToBottom =
-                                (diff < 5) && (consoleRecyclerView.scrollState == SCROLL_STATE_IDLE)
+                                (diff < lines.size + 2) && (consoleRecyclerView.scrollState == SCROLL_STATE_IDLE)
                             adapter.addData(line)
                             if (isScrolledToBottom) {
                                 consoleRecyclerView.scrollToPosition(adapter.itemCount - 1)

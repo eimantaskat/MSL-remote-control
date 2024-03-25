@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Minecraft Server Launcher</string>
     <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
+    <string name="title_properties">Properties</string>
     <string name="title_console">Console</string>
     <string name="scan_barcode">Scan Barcode</string>
 
@@ -19,4 +19,17 @@
     <string name="server_not_running">No server is running</string>
     <string name="version_icon_description">Server version</string>
     <string name="player_count_description">Player count</string>
+    <string name="difficulty">Difficulty</string>
+    <string name="gamemode">Gamemode</string>
+    <string name="slotsNumber">Slots</string>
+    <string name="whitelist">Whitelist</string>
+    <string name="pvp">PvP</string>
+    <string name="command_blocks">Command Blocks</string>
+    <string name="allow_flight">Allow Flight</string>
+    <string name="spawn_animals">Spawn Animals</string>
+    <string name="spawn_monsters">Spawn Monsters</string>
+    <string name="spawn_npcs">Spawn NPCs</string>
+    <string name="allow_nether">Allow Nether</string>
+    <string name="force_gamemode">Force Gamemode</string>
+    <string name="spawn_protection">Spawn Protection</string>
 </resources>

@@ -286,7 +286,7 @@ class HomeFragment : Fragment() {
                 refreshMslStateJob = CoroutineScope(Dispatchers.Main).launch {
                     while (isActive) {
                         refreshServerStatus()
-                        delay(1000)
+                        delay(5000)
                     }
                 }
             }

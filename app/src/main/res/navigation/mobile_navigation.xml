@@ -12,10 +12,10 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="minecraft.server.launcher.remote.control.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_properties"
+        android:name="minecraft.server.launcher.remote.control.ui.properties.PropertiesFragment"
+        android:label="@string/title_properties"
+        tools:layout="@layout/fragment_properties" />
 
     <fragment
         android:id="@+id/navigation_console"

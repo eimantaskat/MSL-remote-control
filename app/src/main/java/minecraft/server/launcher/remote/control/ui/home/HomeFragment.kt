@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -26,6 +27,7 @@ import minecraft.server.launcher.remote.control.MainActivity
 import minecraft.server.launcher.remote.control.MslClient
 import minecraft.server.launcher.remote.control.R
 import minecraft.server.launcher.remote.control.databinding.FragmentHomeBinding
+import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -50,6 +52,9 @@ class HomeFragment : Fragment() {
 
     private var refreshMslStateJob: Job? = null
     private lateinit var mainActivity: MainActivity
+
+    private var serverIsRunning = false
+    private var oldServersListString = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -120,9 +125,37 @@ class HomeFragment : Fragment() {
             binding.serverDesriptionText.text = newText
         }
 
+        homeViewModel.serversListArrayAdapter.observe(viewLifecycleOwner) { arrayAdapter ->
+            binding.serversListSpinner.adapter = arrayAdapter
+        }
+
+        homeViewModel.serverSelectionLayoutVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.serverSelectionLayout.visibility = visibility
+        }
+
+        homeViewModel.serverStartingSpinnerVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.serverStartingSpinner.visibility = visibility
+        }
+
+        homeViewModel.startServerButtonVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.startServerButton.visibility = visibility
+        }
+
+        homeViewModel.stopServerButtonVisibility.observe(viewLifecycleOwner) { visibility ->
+            binding.stopServerButton.visibility = visibility
+        }
+
         // Bind functions to buttons
         binding.retryButton.setOnClickListener {
             updateServerStatus()
+        }
+
+        binding.startServerButton.setOnClickListener {
+            startServer()
+        }
+
+        binding.stopServerButton.setOnClickListener {
+            stopServer()
         }
 
         binding.scanQrButton.setOnClickListener {
@@ -136,6 +169,31 @@ class HomeFragment : Fragment() {
             }
         }
         return root
+    }
+
+    private fun stopServer() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = mslClient.stopServer()
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    homeViewModel.setServerStartingSpinnerVisibility(View.VISIBLE)
+                    homeViewModel.setStopServerButtonVisibility(View.INVISIBLE)
+                }
+            }
+        }
+    }
+
+    private fun startServer() {
+        val selectedServerName = binding.serversListSpinner.selectedItem.toString()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = mslClient.startServer(selectedServerName)
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    homeViewModel.setServerStartingSpinnerVisibility(View.VISIBLE)
+                    homeViewModel.setStartServerButtonVisibility(View.INVISIBLE)
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -220,13 +278,41 @@ class HomeFragment : Fragment() {
 
             val jsonResponse = JSONObject(response)
             val isRunning = jsonResponse.getBoolean("is_running")
+            if (isRunning != serverIsRunning) {
+                withContext(Dispatchers.Main) {
+                    homeViewModel.setServerStartingSpinnerVisibility(View.INVISIBLE)
+                }
+                serverIsRunning = isRunning
+            }
+
             if (!isRunning) {
+                val serversListString = mslClient.getServersList()
+                val jsonArray = JSONArray(serversListString)
+                val serversList = ArrayList<String>()
+                for (i in 0 until jsonArray.length()) {
+                    val serverInfo = jsonArray.getString(i)
+                    serversList.add(serverInfo)
+                }
+                val adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_spinner_item,
+                    serversList
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
                 withContext(Dispatchers.Main) {
                     mainActivity.serverIsRunning.value = false
+
+                    if (oldServersListString != serversListString) {
+                        homeViewModel.setServersListArrayAdapter(adapter)
+                        oldServersListString = serversListString
+                    }
 
                     homeViewModel.setInfoText(getString(R.string.server_not_running))
                     homeViewModel.setInfoTextVisibility(View.VISIBLE)
                     homeViewModel.setStatusTextVisibility(View.VISIBLE)
+                    homeViewModel.setServerSelectionLayoutVisibility(View.VISIBLE)
+                    homeViewModel.setStopServerButtonVisibility(View.INVISIBLE)
                     homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
                 }
                 return@launch
@@ -249,7 +335,12 @@ class HomeFragment : Fragment() {
 
                 homeViewModel.setInfoTextVisibility(View.INVISIBLE)
                 homeViewModel.setStatusTextVisibility(View.INVISIBLE)
+                homeViewModel.setServerSelectionLayoutVisibility(View.INVISIBLE)
+                homeViewModel.setServerStartingSpinnerVisibility(View.INVISIBLE)
+                homeViewModel.setStopServerButtonVisibility(View.VISIBLE)
                 homeViewModel.setServerInfoLayoutVisibility(View.VISIBLE)
+                homeViewModel.setStartServerButtonVisibility(View.VISIBLE)
+
             }
         }
     }
@@ -269,6 +360,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.setInfoTextVisibility(View.INVISIBLE)
                 homeViewModel.setServerInfoLayoutVisibility(View.INVISIBLE)
                 homeViewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
+                homeViewModel.setServerSelectionLayoutVisibility(View.INVISIBLE)
 
                 val nightModeFlags = requireContext().resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
                 if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
@@ -282,6 +374,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.setLoadingVisibility(View.INVISIBLE)
                 homeViewModel.setNotConnectedButtonsVisibility(View.INVISIBLE)
                 homeViewModel.setStatusTextColor(android.R.color.holo_green_light)
+                homeViewModel.setServerSelectionLayoutVisibility(View.VISIBLE)
 
                 refreshMslStateJob = CoroutineScope(Dispatchers.Main).launch {
                     while (isActive) {
@@ -299,6 +392,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.setInfoTextVisibility(View.VISIBLE)
                 homeViewModel.setNotConnectedButtonsVisibility(View.VISIBLE)
                 homeViewModel.setStatusTextColor(android.R.color.holo_red_dark)
+                homeViewModel.setServerSelectionLayoutVisibility(View.INVISIBLE)
 
                 refreshMslStateJob?.cancel()
             }

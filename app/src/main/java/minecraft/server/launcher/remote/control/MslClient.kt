@@ -107,7 +107,7 @@ class MslClient(private val viewModel: MainViewModel) {
     }
 
     fun getServerStatus(): String? {
-        val callTimeout: Long = 30
+        val callTimeout: Long = 5
         if (!this::activeIp.isInitialized) {
             return apiCallWithUnknownIp("get_msl_status", callTimeout)
         }
@@ -125,6 +125,20 @@ class MslClient(private val viewModel: MainViewModel) {
         return activeApiCall(route)
     }
 
+    fun getServersList(): String {
+        return activeApiCall("get_servers_list") ?: ""
+    }
+
+    fun startServer(serverName: String): Boolean {
+        val route = "start_server?server_name=$serverName"
+        val response = activeApiCall(route)
+        return response == "OK"
+    }
+
+    fun stopServer(): Boolean {
+        val response = activeApiCall("stop_server")
+        return response == "OK"
+    }
 
     suspend fun loadServerInfo() {
         viewModel.dataStore.getServerLogin()

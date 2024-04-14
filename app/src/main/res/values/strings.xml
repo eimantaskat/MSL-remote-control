@@ -32,4 +32,6 @@
     <string name="allow_nether">Allow Nether</string>
     <string name="force_gamemode">Force Gamemode</string>
     <string name="spawn_protection">Spawn Protection</string>
+    <string name="start_server_button_text">Start Server</string>
+    <string name="stop_server_button_text">Stop Server</string>
 </resources>

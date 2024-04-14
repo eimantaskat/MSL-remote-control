@@ -12,8 +12,6 @@ class PropertiesFragment : Fragment() {
 
     private var _binding: FragmentPropertiesBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -22,7 +20,7 @@ class PropertiesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val propertiesViewModel =
-            ViewModelProvider(this).get(PropertiesViewModel::class.java)
+            ViewModelProvider(this)[PropertiesViewModel::class.java]
 
         _binding = FragmentPropertiesBinding.inflate(inflater, container, false)
         val root: View = binding.root

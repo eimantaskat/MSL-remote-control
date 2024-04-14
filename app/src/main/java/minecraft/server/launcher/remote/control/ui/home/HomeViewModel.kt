@@ -1,7 +1,7 @@
 package minecraft.server.launcher.remote.control.ui.home
 
-import android.opengl.Visibility
 import android.view.View
+import android.widget.ArrayAdapter
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -54,6 +54,29 @@ class HomeViewModel : ViewModel() {
     private val _serverDescriptionText = MutableLiveData<String>()
     val serverDescriptionText: LiveData<String> = _serverDescriptionText
 
+    private val _serversListArrayAdapter = MutableLiveData<ArrayAdapter<String>>()
+    val serversListArrayAdapter: LiveData<ArrayAdapter<String>> = _serversListArrayAdapter
+
+    private val _serverSelectionLayoutVisibility = MutableLiveData<Int>().apply {
+        value = View.INVISIBLE
+    }
+    val serverSelectionLayoutVisibility: LiveData<Int> = _serverSelectionLayoutVisibility
+
+    private val _serverStartingSpinnerVisibility = MutableLiveData<Int>().apply {
+        value = View.INVISIBLE
+    }
+    val serverStartingSpinnerVisibility: LiveData<Int> = _serverStartingSpinnerVisibility
+
+    private val _startServerButtonVisibility = MutableLiveData<Int>().apply {
+        value = View.VISIBLE
+    }
+    val startServerButtonVisibility: LiveData<Int> = _startServerButtonVisibility
+
+    private val _stopServerButtonVisibility = MutableLiveData<Int>().apply {
+        value = View.VISIBLE
+    }
+    val stopServerButtonVisibility: LiveData<Int> = _stopServerButtonVisibility
+
     fun setInfoText(newText: String) {
         _infoText.value = newText
     }
@@ -100,5 +123,25 @@ class HomeViewModel : ViewModel() {
 
     fun setDescriptionText(text: String) {
         _serverDescriptionText.value = text
+    }
+
+    fun setServersListArrayAdapter(arrayAdapter: ArrayAdapter<String>) {
+        _serversListArrayAdapter.value = arrayAdapter
+    }
+
+    fun setServerSelectionLayoutVisibility(visibility: Int) {
+        _serverSelectionLayoutVisibility.value = visibility
+    }
+
+    fun setServerStartingSpinnerVisibility(visibility: Int) {
+        _serverStartingSpinnerVisibility.value = visibility
+    }
+
+    fun setStartServerButtonVisibility(visibility: Int) {
+        _startServerButtonVisibility.value = visibility
+    }
+
+    fun setStopServerButtonVisibility(visibility: Int) {
+        _stopServerButtonVisibility.value = visibility
     }
 }

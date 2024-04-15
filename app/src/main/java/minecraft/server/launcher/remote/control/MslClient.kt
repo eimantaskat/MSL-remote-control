@@ -1,10 +1,12 @@
 package minecraft.server.launcher.remote.control
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.take
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.json.JSONObject
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -73,7 +75,10 @@ class MslClient(private val viewModel: MainViewModel) {
         }
     }
 
-    private fun activeApiCall(route: String, callTimeout: Long = 30): String? {
+    private suspend fun activeApiCall(route: String, callTimeout: Long = 30): String? {
+        while (!this::activeIp.isInitialized) {
+            delay(100)
+        }
         val address = "https://$activeIp:$port/$route"
 
         val httpClient = generateInsecureOkHttpClient(callTimeout)
@@ -116,27 +121,37 @@ class MslClient(private val viewModel: MainViewModel) {
             ?: return apiCallWithUnknownIp("get_msl_status", callTimeout)
     }
 
-    fun getConsoleLog(startLine: Int = 0): String? {
+    suspend fun getConsoleLog(startLine: Int = 0): String? {
         return activeApiCall("get_console_log?start_line=$startLine")
     }
 
-    fun executeConsoleCommand(command: String): String? {
+    suspend fun executeConsoleCommand(command: String): String? {
         val route = "execute_console_command?command=$command"
         return activeApiCall(route)
     }
 
-    fun getServersList(): String {
+    suspend fun getServersList(): String {
         return activeApiCall("get_servers_list") ?: ""
     }
 
-    fun startServer(serverName: String): Boolean {
+    suspend fun startServer(serverName: String): Boolean {
         val route = "start_server?server_name=$serverName"
         val response = activeApiCall(route)
         return response == "OK"
     }
 
-    fun stopServer(): Boolean {
+    suspend fun stopServer(): Boolean {
         val response = activeApiCall("stop_server")
+        return response == "OK"
+    }
+
+    suspend fun getServerProperties(): JSONObject? {
+        val response = activeApiCall("get_server_properties") ?: return null
+        return JSONObject(response)
+    }
+
+    suspend fun setServerProperties(key: String, value: String): Boolean {
+        val response = activeApiCall("update_server_properties?key=$key&value=$value")
         return response == "OK"
     }
 
